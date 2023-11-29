@@ -30,6 +30,8 @@ async function run() {
     // await client.connect();
 
     const userCollection = client.db("thoughtScape").collection("users");
+    const tagCollection = client.db("thoughtScape").collection("tags");
+    const postCollection = client.db("thoughtScape").collection("posts");
 
 
     // jwt related api
@@ -72,6 +74,18 @@ async function run() {
         const user = req.body;
         const result = await userCollection.insertOne(user);
         res.send(result);
+    })
+
+    // tags collection
+    app.get("/tags", async(req, res) => {
+      const result = await tagCollection.find().toArray();
+      res.send(result);
+    })
+
+    // posts related api
+    app.get('/posts', async(req, res) => {
+      const result = await postCollection.find().toArray();
+      res.send(result);
     })
 
     // Send a ping to confirm a successful connection
