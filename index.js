@@ -70,25 +70,30 @@ async function run() {
     }
 
     // logged in user info
-    app.post("/users", async(req, res) => {
-        const user = req.body;
-        const result = await userCollection.insertOne(user);
-        res.send(result);
+    app.post("/users", async (req, res) => {
+      const user = req.body;
+      const query = { email: user.email }
+      const existingUser = await userCollection.findOne(query);
+      if (existingUser) {
+        return res.send({ message: 'user already exists', insertedId: null })
+      }
+      const result = await userCollection.insertOne(user);
+      res.send(result);
     })
 
     // tags collection
-    app.get("/tags", async(req, res) => {
+    app.get("/tags", async (req, res) => {
       const result = await tagCollection.find().toArray();
       res.send(result);
     })
 
     // posts related api
-    app.get('/posts', async(req, res) => {
+    app.get('/posts', async (req, res) => {
       const result = await postCollection.find().toArray();
       res.send(result);
     })
 
-    app.get('/posts/:id', async(req, res) => {
+    app.get('/posts/:id', async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await postCollection.findOne(query);
@@ -107,9 +112,9 @@ run().catch(console.dir);
 
 
 app.get('/', (req, res) => {
-    res.send('Thought scape is running')
+  res.send('Thought scape is running')
 })
 
 app.listen(port, () => {
-    console.log(`Thought scape is running on port ${port}`);
+  console.log(`Thought scape is running on port ${port}`);
 })
