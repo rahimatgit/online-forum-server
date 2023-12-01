@@ -57,7 +57,7 @@ async function run() {
       })
     }
 
-    // use verify admin after verifyToken
+    // verify admin
     const verifyAdmin = async (req, res, next) => {
       const email = req.decoded.email;
       const query = { email: email };
@@ -70,6 +70,11 @@ async function run() {
     }
 
     // logged in user info
+    app.get('/users', async(req, res) => {
+      const result = await userCollection.find().toArray();
+      res.send(result);
+    })
+
     app.post("/users", async (req, res) => {
       const user = req.body;
       const query = { email: user.email }
@@ -81,6 +86,22 @@ async function run() {
       res.send(result);
     })
 
+    app.get('/users/admin/:email', verifyToken, async (req, res) => {
+      const email = req.params.email;
+
+      if (email !== req.decoded.email) {
+        return res.status(403).send({ message: 'forbidden access' })
+      }
+
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      let admin = false;
+      if (user) {
+        admin = user?.role === 'admin';
+      }
+      res.send({ admin });
+    })
+
     // tags collection
     app.get("/tags", async (req, res) => {
       const result = await tagCollection.find().toArray();
@@ -88,8 +109,17 @@ async function run() {
     })
 
     // posts related api
+    app.get('/postCount', async (req, res) => {
+      const count = await postCollection.estimatedDocumentCount();
+      res.send({ count });
+    })
+
+
     app.get('/posts', async (req, res) => {
-      const result = await postCollection.find().toArray();
+      const page = parseInt(req.query.page);
+      const size = parseInt(req.query.size);
+      const cursor = postCollection.find().skip(page * size).limit(size);
+      const result = await cursor.toArray();
       res.send(result);
     })
 
